@@ -1,20 +1,36 @@
 ---
-title: "project title"
+title: "Generational Differences in Attitudes on How to Get Ahead"
 author: "Mike Silva"
 date: "11 September 2014"
 output:
+  pdf_document: default
   html_document:
     theme: cerulean
 ---
 
-<!-- For more info on RMarkdown see http://rmarkdown.rstudio.com/ -->
-
-<!-- Enter the code required to load your data in the space below. The data will be loaded but the line of code won't show up in your write up (echo=FALSE) in order to save space-->
-```{r echo=FALSE}
+```{r echo=FALSE, cache=TRUE , message=FALSE}
 load(url("http://bit.ly/dasi_gss_data"))
-```
+library(dplyr)
+library(plyr)
+library(ggplot2)
 
-<!-- In the remainder of the document, add R code chunks as needed -->
+gss$birth.year <- gss$year - gss$age
+
+get.generation <- function(birth.year){
+  if(birth.year %in% 1883:1900){return('1-Lost')}
+  else if(birth.year %in% 1901:1927){return('2-Greatest')}
+  else if(birth.year %in% 1928:1945){return('3-Silent')}
+  else if(birth.year %in% 1946:1964){return('4-Baby Boomer')}
+  else if(birth.year %in% 1965:1980){return('5-Gen X')}
+  else if(birth.year %in% 1981:2015){return('6-Millennial')}
+  else{return('7-Unknown')}
+}
+
+gss$generation <- as.factor(sapply(gss$birth.year, get.generation))
+
+## Relabel the generations
+gss$generation <- revalue(gss$generation, c('1-Lost'='Lost', '2-Greatest'='Greatest', '3-Silent'='Silent', '4-Baby Boomer'='Baby Boomer', '5-Gen X'='Gen X', '6-Millennial'='Millennial','7-Unknown'='Unknown'))
+```
 
 ### Introduction:
 
@@ -22,11 +38,20 @@ Insert introduction here...
 
 ### Data:
 
-Insert data section here...
+This analysis uses data from the General Social Survey (GSS).  The GSS is conducted face-to-face with an in-person interview by the National Opinion Research Center at the University of Chicago.  The universe is adults (18+) in randomly selected households. responses range from `r min(gss$year)` to `r max(gss$year)`.
+
+```{r, echo=FALSE}
+ggplot(gss, aes(x = generation, fill=generation)) + geom_bar() + ggtitle('Figure 1: Number of Respondents by Generation') + theme(axis.title.x = element_blank()) + ylab('Count') + theme(legend.position='none')
+```
+
 
 ### Exploratory data analysis:
 
 Insert exploratory data analysis here...
+```{r}
+table(gss$getahead, gss$generation)
+```
+
 
 ### Inference:
 
