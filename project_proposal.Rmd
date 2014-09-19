@@ -1,0 +1,73 @@
+---
+title: "Research Project Proposal"
+author: "Mike Silva"
+date: "September 2014"
+output: pdf_document
+---
+
+```{r echo=FALSE, message=FALSE}
+load(url("http://bit.ly/dasi_gss_data"))
+library(dplyr)
+library(plyr)
+library(ggplot2)
+library(pander)
+
+gss <- gss[!is.na(gss$getahead),]
+gss$birth.year <- gss$year - gss$age
+
+get.generation <- function(birth.year){
+  if(birth.year %in% 1883:1900){return('1-Lost')}
+  else if(birth.year %in% 1901:1927){return('2-Greatest')}
+  else if(birth.year %in% 1928:1945){return('3-Silent')}
+  else if(birth.year %in% 1946:1964){return('4-Baby Boomer')}
+  else if(birth.year %in% 1965:1980){return('5-Gen X')}
+  else if(birth.year %in% 1981:2015){return('6-Millennial')}
+  else{return('7-Unknown')}
+}
+
+gss$generation <- as.factor(sapply(gss$birth.year, get.generation))
+
+## Relabel the generations
+gss$generation <- revalue(gss$generation, c('1-Lost'='Lost', '2-Greatest'='Greatest', '3-Silent'='Silent', '4-Baby Boomer'='Baby Boomer', '5-Gen X'='Gen X', '6-Millennial'='Millennial','7-Unknown'='Unknown'))
+```
+
+## Introduction
+This research project will use data from the General Social Survey (GSS).  The GSS is conducted face-to-face with an in-person interview by the National Opinion Research Center at the University of Chicago.  The universe is adults (18+) in randomly selected households.
+
+```{r, echo=FALSE}
+t <- as.data.frame(table(gss$getahead))
+total <- sum(t$Freq)
+t$percent <- round((t$Freq / total)*100,0)
+names(t) <- c('Response','Count','Percent of Total')
+```
+
+One of the questions they ask respondents is "Some people say that people get ahead by their own hard work; others say that lucky breaks or help from other people are more important. Which do you think is most important?"  From `r min(gss$year)` to `r max(gss$year)`, `r prettyNum(total, big.mark=',')` people have answered this question.  The following table summarizes their responses:
+
+**Table 1: General Social Survey Responses to How People Get Ahead**
+```{r results='asis', echo=FALSE}
+pandoc.table(t, style = 'rmarkdown', big.mark = ',')
+```
+
+## The Research Question
+A Pew Research Center study found that Baby Boomers most often cited their work ethic as a feature that made their generation unique from all other generations.  Are there  generational differences in the view of how people get ahead?  
+
+## My Approach
+The respondents will be organized into generations based on their birth year.  I will examine the responses to the how people get ahead questions to see if there are differences between the generations.  I will test to see if the differences are statistically significant.  The following generational definitions will be used:  
+
+* Lost: 1883 to 1900
+* Greatest: 1901 to 1927
+* Silent: 1928 to 1945
+* Baby Boomer: 1946 to 1964
+* Gen X: 1965 to 1980
+* Millennial: 1981 to 2015
+
+```{r, echo=FALSE}
+ggplot(gss, aes(x = generation, fill=generation)) + geom_bar() + ggtitle('Figure 1: Number of Respondents by Generation') + theme(axis.title.x = element_blank()) + ylab('Count') + theme(legend.position='none')
+```
+
+**Table 2: General Social Survey Respondents by Generation**
+```{r results='asis', echo=FALSE}
+t <- as.data.frame(table(gss$generation))
+names(t) <- c('Generation','Respondents')
+pandoc.table(t, style = 'rmarkdown', big.mark = ',')
+```
